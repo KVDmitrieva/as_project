@@ -23,28 +23,29 @@ class BaseDataset(Dataset):
             wave_augs=None,
             spec_augs=None,
             limit=None,
-            max_audio_length=None,
-            max_text_length=None,
+            max_audio_length=64000
     ):
         self.config_parser = config_parser
         self.wave_augs = wave_augs
         self.spec_augs = spec_augs
         self.log_spec = config_parser["preprocessing"]["log_spec"]
 
-        self._assert_index_is_valid(index)
-        index = self._filter_records_from_dataset(index, max_audio_length, max_text_length, limit)
+        self.max_len = max_audio_length
+        index = self._filter_records_from_dataset(index, limit)
         self._index: List[dict] = index
 
     def __getitem__(self, ind):
         data_dict = self._index[ind]
-
+        audio_path = data_dict["path"]
+        audio_wave = self.load_audio(audio_path)
+        if audio_wave.shape[-1] > self.max_len:
+            ind = random.randint(0, audio_wave.shape[-1] - self.max_len)
+            audio_wave = audio_wave[:, ind:ind + self.max_len]
+        audio_wave, audio_spec = self.process_wave(audio_wave)
         return {
-            "text": data_dict["text"],
-            "pitch": data_dict.get("pitch", None),
-            "energy": data_dict["energy"],
-            "text_encoded": np.array(text_to_sequence(data_dict["text"], ["english_cleaners"])),
-            "mel": data_dict.get("mel", None),
-            "alignment": data_dict.get("alignment", None)
+            "audio": audio_wave,
+            "spectrogram": audio_spec,
+            "target": data_dict["target"]
         }
 
     @staticmethod
@@ -78,46 +79,10 @@ class BaseDataset(Dataset):
             return audio_tensor_wave, audio_tensor_spec
 
     @staticmethod
-    def _filter_records_from_dataset(
-            index: list, max_audio_length, max_text_length, limit
-    ) -> list:
-        initial_size = len(index)
-
-        initial_size = len(index)
-        if max_text_length is not None:
-            exceeds_text_length = (
-                    np.array(
-                        [len(el["text"]) for el in index]
-                    )
-                    >= max_text_length
-            )
-            _total = exceeds_text_length.sum()
-            logger.info(
-                f"{_total} ({_total / initial_size:.1%}) records are longer then "
-                f"{max_text_length} characters. Excluding them."
-            )
-        else:
-            exceeds_text_length = False
-
-        records_to_filter = exceeds_text_length
-
-        if records_to_filter is not False and records_to_filter.any():
-            _total = records_to_filter.sum()
-            index = [el for el, exclude in zip(index, records_to_filter) if not exclude]
-            logger.info(
-                f"Filtered {_total}({_total / initial_size:.1%}) records  from dataset"
-            )
-
+    def _filter_records_from_dataset(index: list, limit) -> list:
         if limit is not None:
-            random.seed(42)  # best seed for deep learning
+            random.seed(42)
             random.shuffle(index)
             index = index[:limit]
         return index
 
-    @staticmethod
-    def _assert_index_is_valid(index):
-        for entry in index:
-            assert "text" in entry, (
-                "Each dataset item should include field 'text'"
-                " - text transcription of the audio."
-            )

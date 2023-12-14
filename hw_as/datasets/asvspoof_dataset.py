@@ -44,7 +44,7 @@ class ASVspoofDataset(BaseDataset):
                         "path": str(flac_path.absolute().resolve()),
                         "audio_len": length,
                         "spoof_algorithm": spoof_alg,
-                        "target": int(target == "spoof")
+                        "target": int(target == "bonafide")
                     }
                 )
         return index
