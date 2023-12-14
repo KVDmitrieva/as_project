@@ -5,8 +5,6 @@ import warnings
 import numpy as np
 import torch
 
-import utils
-
 import hw_as.loss as module_loss
 import hw_as.metric as module_metric
 import hw_as.model as module_arch
@@ -54,9 +52,6 @@ def main(config):
     optimizer = config.init_obj(config["optimizer"], torch.optim, trainable_params)
     lr_scheduler = config.init_obj(config["lr_scheduler"], torch.optim.lr_scheduler, optimizer)
 
-    waveglow_model = utils.get_WaveGlow()
-    waveglow_model = waveglow_model.cuda()
-
     trainer = Trainer(
         model,
         loss_module,
@@ -64,7 +59,6 @@ def main(config):
         optimizer,
         config=config,
         device=device,
-        waveglow_model=waveglow_model,
         dataloaders=dataloaders,
         lr_scheduler=lr_scheduler,
         len_epoch=config["trainer"].get("len_epoch", None)
