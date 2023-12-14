@@ -9,11 +9,8 @@ pandas
 speechbrain~=0.5.15
 datasets
 torch_audiomentations
-editdistance
 wandb
 pyctcdecode
 torchaudio~=2.0.0
 pillow
 gdown
-inflect
-pyworld

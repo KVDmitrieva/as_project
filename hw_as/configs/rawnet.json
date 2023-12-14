@@ -14,12 +14,12 @@
     "type": "RawNet2",
     "args": {
       "sinc_params": {
-        "out_channels": 1024,
-        "kernel_size": 129
+        "out_channels": 20,
+        "kernel_size": 1024
       },
       "resblocks_params": [
         {
-          "in_channels": 1024,
+          "in_channels": 20,
           "out_channels": 20,
           "first_norm": false
         },
@@ -45,7 +45,7 @@
         }
       ],
       "gru_params": {
-        "input_size": 512,
+        "input_size": 128,
         "hidden_size": 1024,
         "num_layers": 3,
         "batch_first": true
