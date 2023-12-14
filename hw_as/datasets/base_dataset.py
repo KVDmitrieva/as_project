@@ -31,7 +31,7 @@ class BaseDataset(Dataset):
             audio_wave = audio_wave[:, ind:ind + self.max_len]
         audio_wave, audio_spec = self.process_wave(audio_wave)
         return {
-            "audio": audio_wave,
+            "audio_path": audio_path,
             "spectrogram": audio_spec,
             "target": data_dict["target"]
         }
