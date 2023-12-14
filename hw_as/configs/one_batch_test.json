@@ -58,27 +58,46 @@
   },
   "data": {
     "train": {
-      "batch_size": 32,
-      "num_workers": 0,
-      "datasets": [
-        {
-          "type": "LJspeechDataset",
-          "args": {
-            "part": "val",
-            "limit": 10
-          }
-        }
-      ]
-    },
-    "val": {
       "batch_size": 10,
       "num_workers": 0,
       "datasets": [
         {
-          "type": "LJspeechDataset",
+          "type": "ASVspoofDataset",
           "args": {
-            "part": "val",
-            "limit": 10
+            "part": "train",
+            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA/LA",
+            "limit": 10,
+            "max_audio_length": 64000
+          }
+        }
+      ]
+    },
+    "dev": {
+      "batch_size": 10,
+      "num_workers": 0,
+      "datasets": [
+        {
+          "type": "ASVspoofDataset",
+          "args": {
+            "part": "dev",
+            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA/LA",
+            "limit": 10,
+            "max_audio_length": 64000
+          }
+        }
+      ]
+    },
+    "eval": {
+      "batch_size": 10,
+      "num_workers": 0,
+      "datasets": [
+        {
+          "type": "ASVspoofDataset",
+          "args": {
+            "part": "eval",
+            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA/LA",
+            "limit": 10,
+            "max_audio_length": 64000
           }
         }
       ]
@@ -97,7 +116,13 @@
       "weight": [1.0, 0.9]
     }
   },
-  "metrics": [],
+  "metrics": [
+    {
+      "type": "EERMetric",
+      "args": {
+        "name": "EER"
+      },
+  ],
   "trainer": {
     "epochs": 10,
     "save_dir": "saved/",
