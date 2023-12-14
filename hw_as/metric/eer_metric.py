@@ -1,6 +1,7 @@
 from hw_as.metric.base_metric import BaseMetric
 from hw_as.metric.eer_calc import compute_eer
 
+
 class EERMetric(BaseMetric):
     def __init__(self, args, kwargs):
         super.__init__(*args, **kwargs)

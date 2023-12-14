@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseDataset(Dataset):
-    def __init__(self, index, config_parser: ConfigParser, limit=None, max_audio_length=64000):
+    def __init__(self, index, config_parser: ConfigParser, limit=None, max_audio_length=None):
         self.config_parser = config_parser
         self.log_spec = config_parser["preprocessing"]["log_spec"]
 
@@ -26,7 +26,7 @@ class BaseDataset(Dataset):
         data_dict = self._index[ind]
         audio_path = data_dict["path"]
         audio_wave = self.load_audio(audio_path)
-        if audio_wave.shape[-1] > self.max_len:
+        if self.max_len is not None and audio_wave.shape[-1] > self.max_len:
             ind = random.randint(0, audio_wave.shape[-1] - self.max_len)
             audio_wave = audio_wave[:, ind:ind + self.max_len]
         audio_wave, audio_spec = self.process_wave(audio_wave)
