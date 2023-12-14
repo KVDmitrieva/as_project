@@ -8,7 +8,7 @@ class CrossEntopyLoss(nn.Module):
             weight = torch.tensor(weight)
         self.ce_loss = nn.CrossEntropyLoss(weight=weight)
 
-    def forward(self, x, y **batch):
+    def forward(self, prediction, target, **batch):
         return {
-            "loss": self.ce_loss(x, y)
+            "loss": self.ce_loss(prediction, target)
         }

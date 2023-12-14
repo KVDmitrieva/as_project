@@ -26,8 +26,8 @@ class RawNet2(BaseModel):
             nn.Linear(linear_params["out_features"], 2)
         )
 
-    def forward(self, x, **batch):
-        x = self.sinc_layer(x)
+    def forward(self, spectrogram, **batch):
+        x = self.sinc_layer(spectrogram)
         x = self.resblocks(x)
         x = self.pregru(x)
         x, _ = self.gru(x.transpose(1, 2))
