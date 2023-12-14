@@ -89,11 +89,11 @@ class SincConv_fast(nn.Module):
         # self.window_ = torch.hamming_window(self.kernel_size)
         n_lin = torch.linspace(0, (self.kernel_size / 2) - 1,
                                steps=int((self.kernel_size / 2)))  # computing only half of the window
-        self.window_ = 0.54 - 0.46 * torch.cos(2 * math.pi * n_lin / self.kernel_size);
+        self.window_ = 0.54 - 0.46 * torch.cos(2 * np.pi * n_lin / self.kernel_size);
 
         # (1, kernel_size/2)
         n = (self.kernel_size - 1) / 2.0
-        self.n_ = 2 * math.pi * torch.arange(-n, 0).view(1,
+        self.n_ = 2 * np.pi * torch.arange(-n, 0).view(1,
                                                          -1) / self.sample_rate  # Due to symmetry, I only need half of the time axes
 
     def forward(self, waveforms):
@@ -156,13 +156,11 @@ class ResBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1,
                  padding='same', pooling_kernel=3, negative_slope=0.3, first_norm=True):
         super().__init__()
-        if first_norm:
-            self.head = nn.Sequential(
+        self.head = nn.Sequential(
             nn.BatchNorm1d(num_features=in_channels),
             nn.LeakyReLU(negative_slope=negative_slope)
-            )
-        else:
-            self.head = nn.Identity()
+            ) if first_norm else nn.Identity()
+        self.proj = nn.Identity() if in_channels == out_channels else nn.Conv1d(in_channels, out_channels, 1)
         self.net = nn.Sequential(
             nn.Conv1d(in_channels=in_channels, out_channels=out_channels,
                       kernel_size=kernel_size, stride=stride, padding=padding),
@@ -177,5 +175,5 @@ class ResBlock(nn.Module):
         )
 
     def forward(self, x):
-        x = x + self.net(self.head(x))
+        x = self.proj(x) + self.net(self.head(x))
         return self.epilog(x)

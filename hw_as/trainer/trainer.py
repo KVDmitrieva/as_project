@@ -48,7 +48,7 @@ class Trainer(BaseTrainer):
         """
         Move all necessary tensors to the GPU
         """
-        for tensor_for_gpu in ["spectrogram", "target"]:
+        for tensor_for_gpu in ["audio", "target"]:
             batch[tensor_for_gpu] = batch[tensor_for_gpu].to(device)
         return batch
 
@@ -68,6 +68,7 @@ class Trainer(BaseTrainer):
         self.model.train()
         self.train_metrics.reset()
         self.writer.add_scalar("epoch", epoch)
+        prediction, targets = None, None
         for batch_idx, batch in enumerate(
                 tqdm(self.train_dataloader, desc="train", total=self.len_epoch)
         ):
@@ -88,6 +89,14 @@ class Trainer(BaseTrainer):
                 else:
                     raise e
             self.train_metrics.update("grad norm", self.get_grad_norm())
+
+            if prediction is None:
+                prediction = batch["prediction"].detach().cpu()
+                target = batch["target"].detach().cpu()
+            else:
+                prediction = torch.cat([prediction, batch["prediction"].detach().cpu()], dim=0)
+                target = torch.cat([target, batch["target"].detach().cpu()], dim=0)
+
             if batch_idx % self.log_step == 0:
                 self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
                 self.logger.debug(
@@ -99,14 +108,15 @@ class Trainer(BaseTrainer):
                     "learning rate", self.lr_scheduler.get_last_lr()[0]
                 )
                 self._log_predictions(**batch)
-                self._log_scalars(self.train_metrics)
-                # we don't want to reset train metrics at the start of every epoch
-                # because we are interested in recent train metrics
-                last_train_metrics = self.train_metrics.result()
-                self.train_metrics.reset()
+
             if batch_idx >= self.len_epoch:
                 break
-        log = last_train_metrics
+
+        for met in self.metrics:
+            self.train_metrics.update(met.name, met(prediction, target))
+
+        self._log_scalars(self.train_metrics)
+        log = self.train_metrics.result()
 
         for part, dataloader in self.evaluation_dataloaders.items():
             val_log = self._evaluation_epoch(epoch, part, dataloader)
@@ -139,8 +149,6 @@ class Trainer(BaseTrainer):
         for key in loss_out.keys():
             metrics.update(key, batch[key].item())
 
-        for met in self.metrics:
-            metrics.update(met.name, met(**batch))
         return batch
 
     def _evaluation_epoch(self, epoch, part, dataloader):
@@ -152,17 +160,23 @@ class Trainer(BaseTrainer):
         """
         self.model.eval()
         self.evaluation_metrics.reset()
+        prediction, targets = None, None
         with torch.no_grad():
-            for batch_idx, batch in tqdm(
-                    enumerate(dataloader),
-                    desc=part,
-                    total=len(dataloader),
-            ):
+            for batch_idx, batch in tqdm(enumerate(dataloader), desc=part, total=len(dataloader)):
                 batch = self.process_batch(
                     batch,
                     is_train=False,
                     metrics=self.evaluation_metrics,
                 )
+                if prediction is None:
+                    prediction = batch["prediction"].detach().cpu()
+                    target = batch["target"].detach().cpu()
+                else:
+                    prediction = torch.cat([prediction, batch["prediction"].detach().cpu()], dim=0)
+                    target = torch.cat([target, batch["target"].detach().cpu()], dim=0)
+
+            for met in self.metrics:
+                (self.evaluation_metrics).update(met.name, met(prediction, target))
             self.writer.set_step(epoch * self.len_epoch, part)
             self._log_scalars(self.evaluation_metrics)
             self._log_predictions(**batch)
@@ -182,19 +196,14 @@ class Trainer(BaseTrainer):
             total = self.len_epoch
         return base.format(current, total, 100.0 * current / total)
 
-    def _log_predictions(self, spectrogram, audio_path, prediction, target, examples_to_log=5, *args, **kwargs):
+    def _log_predictions(self, audio, audio_path, prediction, target, examples_to_log=5, *args, **kwargs):
         if self.writer is None:
             return
-        tuple = list(zip(spectrogram, audio_path, prediction, target))
+        tuple = list(zip(audio, audio_path, prediction, target))
         shuffle(tuple)
         rows = {}
-        for spec, path, pred, audio_target in tuple[:examples_to_log]:
-            image = PIL.Image.open(plot_spectrogram_to_buf(spec.cpu().T))
-            self.writer.add_image(Path(path).name, ToTensor()(image))
-
-            audio_tensor, sr = torchaudio.load(path)
-            audio_tensor = audio_tensor[0:1, :]
-            self.writer.add_audio(Path(path).name, audio, sr)
+        for audio_sample, path, pred, audio_target in tuple[:examples_to_log]:
+            self.writer.add_audio(Path(path).name, audio_sample, self.config["preprocessing"]["sr"])
 
             rows[Path(path).name] = {
                 "target": "bonafide" if audio_target == 1 else "spoofed",

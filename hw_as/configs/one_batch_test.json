@@ -121,8 +121,16 @@
       "type": "EERMetric",
       "args": {
         "name": "EER"
-      },
+      }
+    }
   ],
+  "lr_scheduler": {
+    "type": "StepLR",
+    "args": {
+      "step_size": 100,
+      "gamma": 1.0
+    }
+  },
   "trainer": {
     "epochs": 10,
     "save_dir": "saved/",

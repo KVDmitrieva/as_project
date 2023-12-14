@@ -22,9 +22,6 @@ def get_dataloaders(configs: ConfigParser):
         else:
             dataset = datasets[0]
 
-        # select batch size or batch sampler
-        assert xor("batch_size" in params), \
-            "You must provide batch_size for each split"
         if "batch_size" in params:
             bs = params["batch_size"]
             shuffle = True
@@ -35,6 +32,8 @@ def get_dataloaders(configs: ConfigParser):
         # Fun fact. An hour of debugging was wasted to write this line
         assert bs <= len(dataset), \
             f"Batch size ({bs}) shouldn't be larger than dataset length ({len(dataset)})"
+
+        drop_last = split == "train"
 
         # create dataloader
         dataloader = DataLoader(

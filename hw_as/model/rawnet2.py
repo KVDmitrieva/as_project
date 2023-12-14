@@ -22,12 +22,12 @@ class RawNet2(BaseModel):
         self.gru = nn.GRU(**gru_params)
         self.epilog = nn.Sequential(
             nn.Linear(**linear_params),
-            nn.Softmax(dim=-1)
+            nn.Softmax(dim=-1),
             nn.Linear(linear_params["out_features"], 2)
         )
 
-    def forward(self, spectrogram, **batch):
-        x = self.sinc_layer(spectrogram)
+    def forward(self, audio, **batch):
+        x = self.sinc_layer(audio)
         x = self.resblocks(x)
         x = self.pregru(x)
         x, _ = self.gru(x.transpose(1, 2))
