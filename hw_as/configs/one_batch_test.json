@@ -10,10 +10,6 @@
     },
     "log_spec": true
   },
-  "augmentations": {
-    "wave": [],
-    "spectrogram": []
-  },
   "arch": {
     "type": "RawNet2",
     "args": {

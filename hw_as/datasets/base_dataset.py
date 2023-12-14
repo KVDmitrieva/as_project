@@ -8,26 +8,14 @@ import torchaudio
 from torch import Tensor
 from torch.utils.data import Dataset
 
-from text import text_to_sequence
-
 from hw_as.utils.parse_config import ConfigParser
 
 logger = logging.getLogger(__name__)
 
 
 class BaseDataset(Dataset):
-    def __init__(
-            self,
-            index,
-            config_parser: ConfigParser,
-            wave_augs=None,
-            spec_augs=None,
-            limit=None,
-            max_audio_length=64000
-    ):
+    def __init__(self, index, config_parser: ConfigParser, limit=None, max_audio_length=64000):
         self.config_parser = config_parser
-        self.wave_augs = wave_augs
-        self.spec_augs = spec_augs
         self.log_spec = config_parser["preprocessing"]["log_spec"]
 
         self.max_len = max_audio_length
@@ -65,15 +53,11 @@ class BaseDataset(Dataset):
 
     def process_wave(self, audio_tensor_wave: Tensor):
         with torch.no_grad():
-            if self.wave_augs is not None:
-                audio_tensor_wave = self.wave_augs(audio_tensor_wave)
             wave2spec = self.config_parser.init_obj(
                 self.config_parser["preprocessing"]["spectrogram"],
                 torchaudio.transforms,
             )
             audio_tensor_spec = wave2spec(audio_tensor_wave)
-            if self.spec_augs is not None:
-                audio_tensor_spec = self.spec_augs(audio_tensor_spec)
             if self.log_spec:
                 audio_tensor_spec = torch.log(audio_tensor_spec + 1e-5)
             return audio_tensor_wave, audio_tensor_spec
