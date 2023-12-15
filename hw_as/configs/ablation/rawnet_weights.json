@@ -1,5 +1,5 @@
 {
-  "name": "one_batch_test",
+  "name": "RawNet2_ce_without_weights",
   "n_gpu": 1,
   "preprocessing": {
     "sr": 16000,
@@ -14,12 +14,12 @@
     "type": "RawNet2",
     "args": {
       "sinc_params": {
-        "out_channels": 1024,
-        "kernel_size": 129
+        "out_channels": 20,
+        "kernel_size": 1024
       },
       "resblocks_params": [
         {
-          "in_channels": 1024,
+          "in_channels": 20,
           "out_channels": 20,
           "first_norm": false
         },
@@ -45,7 +45,7 @@
         }
       ],
       "gru_params": {
-        "input_size": 512,
+        "input_size": 128,
         "hidden_size": 1024,
         "num_layers": 3,
         "batch_first": true
@@ -58,7 +58,7 @@
   },
   "data": {
     "train": {
-      "batch_size": 10,
+      "batch_size": 32,
       "num_workers": 0,
       "datasets": [
         {
@@ -66,38 +66,33 @@
           "args": {
             "part": "train",
             "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA/LA",
-            "limit": 10,
             "max_audio_length": 64000
           }
         }
       ]
     },
     "dev": {
-      "batch_size": 10,
+      "batch_size": 32,
       "num_workers": 0,
       "datasets": [
         {
           "type": "ASVspoofDataset",
           "args": {
             "part": "dev",
-            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA/LA",
-            "limit": 10,
-            "max_audio_length": 64000
+            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA/LA"
           }
         }
       ]
     },
     "eval": {
-      "batch_size": 10,
+      "batch_size": 32,
       "num_workers": 0,
       "datasets": [
         {
           "type": "ASVspoofDataset",
           "args": {
             "part": "eval",
-            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA/LA",
-            "limit": 10,
-            "max_audio_length": 64000
+            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA/LA"
           }
         }
       ]
@@ -113,7 +108,6 @@
   "loss": {
     "type": "CrossEntopyLoss",
     "args": {
-      "weight": [1.0, 0.9]
     }
   },
   "metrics": [

@@ -39,7 +39,7 @@ class ASVspoofDataset(BaseDataset):
         protocols_src = self._data_dir / "ASVspoof2019_LA_cm_protocols" / f"ASVspoof2019.LA.cm.{part}.{suff}.txt"
         audio_src_dir = self._data_dir / f"ASVspoof2019_LA_{part}" / "flac"
         with protocols_src.open() as f:
-            for line in tqdm(f, desc=f"Prepare {part} dataset:"):
+            for line in tqdm(f, desc=f"Prepare {part} dataset"):
                 speaker, utterance, ut_type, spoof_alg, target = line.strip().split(' ')
                 flac_path = audio_src_dir / f"{utterance}.flac"
                 t_info = torchaudio.info(str(flac_path))

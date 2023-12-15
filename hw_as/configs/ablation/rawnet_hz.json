@@ -1,0 +1,142 @@
+{
+  "name": "RawNet2_min_low_hz",
+  "n_gpu": 1,
+  "preprocessing": {
+    "sr": 16000,
+    "spectrogram": {
+      "type": "MelSpectrogram",
+      "args": {
+      }
+    },
+    "log_spec": true
+  },
+  "arch": {
+    "type": "RawNet2",
+    "args": {
+      "sinc_params": {
+        "out_channels": 20,
+        "kernel_size": 1024,
+        "min_low_hz": 50
+      },
+      "resblocks_params": [
+        {
+          "in_channels": 20,
+          "out_channels": 20,
+          "first_norm": false
+        },
+        {
+          "in_channels": 20,
+          "out_channels": 20
+        },
+        {
+          "in_channels": 20,
+          "out_channels": 128
+        },
+        {
+          "in_channels": 128,
+          "out_channels": 128
+        },
+        {
+          "in_channels": 128,
+          "out_channels": 128
+        },
+        {
+          "in_channels": 128,
+          "out_channels": 128
+        }
+      ],
+      "gru_params": {
+        "input_size": 128,
+        "hidden_size": 1024,
+        "num_layers": 3,
+        "batch_first": true
+      },
+      "linear_params": {
+        "in_features": 1024,
+        "out_features": 1024
+      }
+    }
+  },
+  "data": {
+    "train": {
+      "batch_size": 32,
+      "num_workers": 0,
+      "datasets": [
+        {
+          "type": "ASVspoofDataset",
+          "args": {
+            "part": "train",
+            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA/LA",
+            "max_audio_length": 64000
+          }
+        }
+      ]
+    },
+    "dev": {
+      "batch_size": 32,
+      "num_workers": 0,
+      "datasets": [
+        {
+          "type": "ASVspoofDataset",
+          "args": {
+            "part": "dev",
+            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA/LA"
+          }
+        }
+      ]
+    },
+    "eval": {
+      "batch_size": 32,
+      "num_workers": 0,
+      "datasets": [
+        {
+          "type": "ASVspoofDataset",
+          "args": {
+            "part": "eval",
+            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA/LA"
+          }
+        }
+      ]
+    }
+  },
+  "optimizer": {
+    "type": "Adam",
+    "args": {
+      "lr": 1e-4,
+      "weight_decay": 1e-4
+    }
+  },
+  "loss": {
+    "type": "CrossEntopyLoss",
+    "args": {
+      "weight": [1.0, 0.9]
+    }
+  },
+  "metrics": [
+    {
+      "type": "EERMetric",
+      "args": {
+        "name": "EER"
+      }
+    }
+  ],
+  "lr_scheduler": {
+    "type": "StepLR",
+    "args": {
+      "step_size": 100,
+      "gamma": 1.0
+    }
+  },
+  "trainer": {
+    "epochs": 10,
+    "save_dir": "saved/",
+    "save_period": 10,
+    "verbosity": 2,
+    "monitor": "min val_loss",
+    "early_stop": 100,
+    "visualize": "wandb",
+    "wandb_project": "as_project",
+    "len_epoch": 100,
+    "grad_norm_clip": 10
+  }
+}
