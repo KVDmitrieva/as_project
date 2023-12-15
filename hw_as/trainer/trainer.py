@@ -166,6 +166,8 @@ class Trainer(BaseTrainer):
                 prediction.append(batch["prediction"].detach().cpu())
                 targets.append(batch["target"].detach().cpu())
 
+            prediction = torch.cat(prediction, dim=0)
+            targets = torch.cat(targets, dim=0)
             for met in self.metrics:
                 (self.evaluation_metrics).update(met.name, met(prediction, targets))
             self.writer.set_step(epoch * self.len_epoch, part)
