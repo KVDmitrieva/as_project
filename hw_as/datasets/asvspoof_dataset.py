@@ -41,7 +41,7 @@ class ASVspoofDataset(BaseDataset):
         print(f"Prepare {part} dataset")
         with protocols_src.open() as f:
             for line in f:
-                speaker, utterance, ut_type, spoof_alg, target = line.split(' ')
+                speaker, utterance, ut_type, spoof_alg, target = line.strip().split(' ')
                 flac_path = audio_src_dir / f"{utterance}.flac"
                 t_info = torchaudio.info(str(flac_path))
                 length = t_info.num_frames / t_info.sample_rate
