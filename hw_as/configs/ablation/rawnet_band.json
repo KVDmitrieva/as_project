@@ -1,5 +1,5 @@
 {
-  "name": "RawNet2_min_low_band",
+  "name": "RawNet2_min_band_hz",
   "n_gpu": 1,
   "preprocessing": {
     "sr": 16000,
@@ -16,7 +16,7 @@
       "sinc_params": {
         "out_channels": 20,
         "kernel_size": 1024,
-        "min_low_band": 50
+        "min_band_hz": 50
       },
       "resblocks_params": [
         {
