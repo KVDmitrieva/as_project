@@ -68,7 +68,7 @@ class Trainer(BaseTrainer):
         self.model.train()
         self.train_metrics.reset()
         self.writer.add_scalar("epoch", epoch)
-        prediction, targets = None, None
+        prediction, targets = [], []
         for batch_idx, batch in enumerate(
                 tqdm(self.train_dataloader, desc="train", total=self.len_epoch)
         ):
@@ -89,13 +89,8 @@ class Trainer(BaseTrainer):
                 else:
                     raise e
             self.train_metrics.update("grad norm", self.get_grad_norm())
-
-            if prediction is None:
-                prediction = batch["prediction"].detach().cpu()
-                target = batch["target"].detach().cpu()
-            else:
-                prediction = torch.cat([prediction, batch["prediction"].detach().cpu()], dim=0)
-                target = torch.cat([target, batch["target"].detach().cpu()], dim=0)
+            prediction.append(batch["prediction"].detach().cpu())
+            targets.append(batch["target"].detach().cpu())
 
             if batch_idx % self.log_step == 0:
                 self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
@@ -111,17 +106,18 @@ class Trainer(BaseTrainer):
 
             if batch_idx >= self.len_epoch:
                 break
-
+        prediction = torch.cat(prediction, dim=0)
+        targets = torch.cat(targets, dim=0)
         for met in self.metrics:
-            self.train_metrics.update(met.name, met(prediction, target))
+            self.train_metrics.update(met.name, met(prediction, targets))
 
         self._log_scalars(self.train_metrics)
         log = self.train_metrics.result()
 
         for part, dataloader in self.evaluation_dataloaders.items():
-            if (part == "dev" and epoch % 5 == 0) or (part == "eval" and epoch % 10 == 0):
-                val_log = self._evaluation_epoch(epoch, part, dataloader)
-                log.update(**{f"{part}_{name}": value for name, value in val_log.items()})
+            # if (part == "dev" and epoch % 5 == 0) or (part == "eval" and epoch % 10 == 0):
+            val_log = self._evaluation_epoch(epoch, part, dataloader)
+            log.update(**{f"{part}_{name}": value for name, value in val_log.items()})
             # torch.cuda.empty_cache()
 
         return log
@@ -162,19 +158,16 @@ class Trainer(BaseTrainer):
         """
         self.model.eval()
         self.evaluation_metrics.reset()
-        prediction, targets = None, None
+        prediction, targets = [], []
         with torch.no_grad():
             for batch_idx, batch in tqdm(enumerate(dataloader), desc=part, total=len(dataloader)):
                 batch = self.process_batch(batch, is_train=False, metrics=self.evaluation_metrics)
-                if prediction is None:
-                    prediction = batch["prediction"].detach().cpu()
-                    target = batch["target"].detach().cpu()
-                else:
-                    prediction = torch.cat([prediction, batch["prediction"].detach().cpu()], dim=0)
-                    target = torch.cat([target, batch["target"].detach().cpu()], dim=0)
+
+                prediction.append(batch["prediction"].detach().cpu())
+                targets.append(batch["target"].detach().cpu())
 
             for met in self.metrics:
-                (self.evaluation_metrics).update(met.name, met(prediction, target))
+                (self.evaluation_metrics).update(met.name, met(prediction, targets))
             self.writer.set_step(epoch * self.len_epoch, part)
             self._log_scalars(self.evaluation_metrics)
             self._log_predictions(**batch)
