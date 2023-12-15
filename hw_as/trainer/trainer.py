@@ -122,6 +122,7 @@ class Trainer(BaseTrainer):
             if (part == "dev" and epoch % 5 == 0) or (part == "eval" and epoch % 10 == 0):
                 val_log = self._evaluation_epoch(epoch, part, dataloader)
                 log.update(**{f"{part}_{name}": value for name, value in val_log.items()})
+                torch.cuda.empty_cache()
 
         return log
 
@@ -164,11 +165,7 @@ class Trainer(BaseTrainer):
         prediction, targets = None, None
         with torch.no_grad():
             for batch_idx, batch in tqdm(enumerate(dataloader), desc=part, total=len(dataloader)):
-                batch = self.process_batch(
-                    batch,
-                    is_train=False,
-                    metrics=self.evaluation_metrics,
-                )
+                batch = self.process_batch(batch, is_train=False, metrics=self.evaluation_metrics)
                 if prediction is None:
                     prediction = batch["prediction"].detach().cpu()
                     target = batch["target"].detach().cpu()
