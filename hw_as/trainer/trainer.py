@@ -119,8 +119,9 @@ class Trainer(BaseTrainer):
         log = self.train_metrics.result()
 
         for part, dataloader in self.evaluation_dataloaders.items():
-            val_log = self._evaluation_epoch(epoch, part, dataloader)
-            log.update(**{f"{part}_{name}": value for name, value in val_log.items()})
+            if (part == "dev" and epoch % 5 == 0) or (part == "eval" and epoch % 10 == 0):
+                val_log = self._evaluation_epoch(epoch, part, dataloader)
+                log.update(**{f"{part}_{name}": value for name, value in val_log.items()})
 
         return log
 
