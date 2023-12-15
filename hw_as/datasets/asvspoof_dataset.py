@@ -38,14 +38,12 @@ class ASVspoofDataset(BaseDataset):
         suff = "trn" if part == "train" else "trl"
         protocols_src = self._data_dir / "ASVspoof2019_LA_cm_protocols" / f"ASVspoof2019.LA.cm.{part}.{suff}.txt"
         audio_src_dir = self._data_dir / f"ASVspoof2019_LA_{part}" / "flac"
-        print(f"Prepare {part} dataset")
         with protocols_src.open() as f:
-            for line in f:
+            for line in tqdm(f, desc=f"Prepare {part} dataset:"):
                 speaker, utterance, ut_type, spoof_alg, target = line.strip().split(' ')
                 flac_path = audio_src_dir / f"{utterance}.flac"
                 t_info = torchaudio.info(str(flac_path))
                 length = t_info.num_frames / t_info.sample_rate
-                print(target, int(target == "bonafide"))
                 index.append(
                     {
                         "path": str(flac_path.absolute().resolve()),
