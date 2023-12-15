@@ -73,7 +73,7 @@
       ]
     },
     "dev": {
-      "batch_size": 32,
+      "batch_size": 64,
       "num_workers": 0,
       "datasets": [
         {
@@ -86,7 +86,7 @@
       ]
     },
     "eval": {
-      "batch_size": 32,
+      "batch_size": 64,
       "num_workers": 0,
       "datasets": [
         {
@@ -128,15 +128,14 @@
     }
   },
   "trainer": {
-    "epochs": 10,
+    "epochs": 100,
     "save_dir": "saved/",
-    "save_period": 10,
+    "save_period": 20,
     "verbosity": 2,
     "monitor": "min val_loss",
     "early_stop": 100,
     "visualize": "wandb",
     "wandb_project": "as_project",
-    "len_epoch": 100,
     "grad_norm_clip": 10
   }
 }
