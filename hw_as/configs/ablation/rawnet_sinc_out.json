@@ -72,19 +72,6 @@
         }
       ]
     },
-    "dev": {
-      "batch_size": 32,
-      "num_workers": 0,
-      "datasets": [
-        {
-          "type": "ASVspoofDataset",
-          "args": {
-            "part": "dev",
-            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA/LA"
-          }
-        }
-      ]
-    },
     "eval": {
       "batch_size": 32,
       "num_workers": 0,
@@ -93,7 +80,8 @@
           "type": "ASVspoofDataset",
           "args": {
             "part": "eval",
-            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA/LA"
+            "data_dir": "/kaggle/input/asvpoof-2019-dataset/LA/LA",
+            "max_audio_length": 64000
           }
         }
       ]
@@ -128,7 +116,7 @@
     }
   },
   "trainer": {
-    "epochs": 20,
+    "epochs": 10,
     "save_dir": "saved/",
     "save_period": 5,
     "verbosity": 2,
