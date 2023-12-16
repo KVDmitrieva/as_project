@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 import torch
+import torchaudio
 import numpy as np
 from tqdm import tqdm
 
@@ -16,7 +17,16 @@ from hw_as.utils.parse_config import ConfigParser
 DEFAULT_CHECKPOINT_PATH = ROOT_PATH / "default_test_model" / "checkpoint.pth"
 
 
-def main(config, out_dir):
+def test_audio(model, path, device):
+    audio_name = path.split('/')[-1]
+    audio_tensor, sr = torchaudio.load(path)
+    audio_tensor = audio_tensor[0:1, :].to(device)
+    prediction = model(audio_tensor)
+    result = "bonafide" if prediction.argmax().item() == 1 else "spoof"
+
+    print(f"Model prediction for {audio_name}: {result}")
+
+def main(config, test_dir, test_file):
     logger = config.get_logger("test")
 
     # define cpu or gpu if possible
@@ -37,12 +47,11 @@ def main(config, out_dir):
     model = model.to(device)
     model.eval()
 
-    if not Path(out_dir).exists():
-        Path(out_dir).mkdir(exist_ok=True, parents=True)
-
-    raise NotImplementedError()
-
-
+    if test_file is not None:
+        test_audio(model, test_file, device)
+    else:
+        for file in os.listdir(test_dir):
+            test_audio(model, test_dir + '/' + file, device)
 
 
 if __name__ == "__main__":
@@ -69,18 +78,18 @@ if __name__ == "__main__":
         help="indices of GPUs to enable (default: all)",
     )
     args.add_argument(
-        "-o",
-        "--output",
-        default="output",
+        "-t",
+        "--test-file",
+        default=None,
         type=str,
-        help="File to write results (.json)",
+        help="Path to test audio",
     )
     args.add_argument(
-        "-t",
-        "--test",
-        default=ROOT_PATH / "test_texts.txt",
+        "-f",
+        "--test-folder",
+        default=ROOT_PATH / "test_dir",
         type=str,
-        help="Path to test texts",
+        help="Path to test dir",
     )
     args.add_argument(
         "-j",
@@ -89,7 +98,6 @@ if __name__ == "__main__":
         type=int,
         help="Number of workers for test dataloader",
     )
-
 
     args = args.parse_args()
 
@@ -108,4 +116,4 @@ if __name__ == "__main__":
         with Path(args.config).open() as f:
             config.config.update(json.load(f))
 
-    main(config, args.output)
+    main(config, args.test_folder, args.test_file)
