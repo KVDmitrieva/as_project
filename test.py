@@ -14,17 +14,17 @@ from hw_as.utils.object_loading import get_dataloaders
 from hw_as.utils.parse_config import ConfigParser
 
 
-DEFAULT_CHECKPOINT_PATH = ROOT_PATH / "default_test_model" / "checkpoint.pth"
+DEFAULT_CHECKPOINT_PATH = ROOT_PATH / "default_test_model" / "model.pth"
 
 
 def test_audio(model, path, device):
     audio_name = path.split('/')[-1]
     audio_tensor, sr = torchaudio.load(path)
-    audio_tensor = audio_tensor[0:1, :].to(device)
+    audio_tensor = audio_tensor[0:1, :].unsqueeze(1).to(device)
     prediction = model(audio_tensor)
     result = "bonafide" if prediction.argmax().item() == 1 else "spoof"
-
     print(f"Model prediction for {audio_name}: {result}")
+
 
 def main(config, test_dir, test_file):
     logger = config.get_logger("test")
