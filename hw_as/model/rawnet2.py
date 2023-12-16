@@ -22,7 +22,6 @@ class RawNet2(BaseModel):
         self.gru = nn.GRU(**gru_params)
         self.epilog = nn.Sequential(
             nn.Linear(**linear_params),
-            nn.Softmax(dim=-1),
             nn.Linear(linear_params["out_features"], 2)
         )
 
