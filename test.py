@@ -23,7 +23,9 @@ def test_audio(model, path, device):
     audio_tensor = audio_tensor[0:1, :].unsqueeze(1).to(device)
     prediction = model(audio_tensor)
     result = "bonafide" if prediction.argmax().item() == 1 else "spoof"
+    print(f"Probs for spoof/bonafide", prediction.detach().list())
     print(f"Model prediction for {audio_name}: {result}")
+
 
 
 def main(config, test_dir, test_file):
@@ -51,7 +53,7 @@ def main(config, test_dir, test_file):
         test_audio(model, test_file, device)
     else:
         for file in os.listdir(test_dir):
-            test_audio(model, test_dir + '/' + file, device)
+            test_audio(model, str(test_dir) + '/' + file, device)
 
 
 if __name__ == "__main__":
