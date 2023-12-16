@@ -21,11 +21,9 @@ def test_audio(model, path, device):
     audio_name = path.split('/')[-1]
     audio_tensor, sr = torchaudio.load(path)
     audio_tensor = audio_tensor[0:1, :].unsqueeze(1).to(device)
-    prediction = model(audio_tensor)
+    prediction = model(audio_tensor).squeeze()
     result = "bonafide" if prediction.argmax().item() == 1 else "spoof"
-    print(f"Probs for spoof/bonafide", prediction.detach().list())
-    print(f"Model prediction for {audio_name}: {result}")
-
+    print(f"Model prediction for {audio_name}: {result}\t \t probs for spoof: {prediction[0]:.3f} \t probs for bonafide: {prediction[1]:.3f}")
 
 
 def main(config, test_dir, test_file):
