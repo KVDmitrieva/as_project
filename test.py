@@ -87,7 +87,7 @@ if __name__ == "__main__":
     args.add_argument(
         "-f",
         "--test-folder",
-        default=ROOT_PATH / "test_dir",
+        default=ROOT_PATH / "test_data",
         type=str,
         help="Path to test dir",
     )
