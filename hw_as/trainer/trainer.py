@@ -196,7 +196,7 @@ class Trainer(BaseTrainer):
         shuffle(tuple)
         rows = {}
         for audio_sample, path, pred, audio_target in tuple[:examples_to_log]:
-            self.writer.add_audio(Path(path).name, audio_sample, self.config["preprocessing"]["sr"])
+            # self.writer.add_audio(Path(path).name, audio_sample, self.config["preprocessing"]["sr"])
 
             rows[Path(path).name] = {
                 "target": "bonafide" if audio_target == 1 else "spoofed",
